@@ -271,7 +271,11 @@ export default function Home() {
                   <h3 className="text-3xl md:text-4xl font-bold text-[#486069] leading-tight">{article.title}</h3>
                   <div className="w-20 h-1 bg-[#FBD86D] rounded-full"></div>
                   <p className="text-[#1F2937] text-lg leading-relaxed">{article.description}</p>
-                  <button className="inline-flex items-center text-[#486069] font-bold text-lg hover:text-[#FBD86D] transition-colors duration-300 group">
+                  <button
+                  onClick={() => {
+                    router.push("/read")
+                  }}
+                  className="inline-flex items-center text-[#486069] font-bold text-lg hover:text-[#FBD86D] transition-colors duration-300 group">
                     Read More
                     <svg
                       className="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform duration-300"
