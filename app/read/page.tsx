@@ -12,11 +12,6 @@ const HTMLFlipBook = dynamic(() => import("react-pageflip").then((mod) => mod.de
 })
 
 // TypeScript Interfaces
-interface FlipbookProps {
-  pages: PageContent[]
-  currentPage: number
-  onPageChange: (page: number) => void
-}
 
 interface PageContent {
   id: number
@@ -35,10 +30,17 @@ interface FlipbookControlsProps {
   totalPages: number
 }
 
+interface FlipBookRef {
+    pageFlip(): {
+      flipNext(): void
+      flipPrev(): void
+    }
+  }
+
 export default function ReadMagazine() {
   const [currentPage, setCurrentPage] = useState(0)
   const [isLoaded, setIsLoaded] = useState(false)
-  const flipBookRef = useRef<any>(null)
+  const flipBookRef = useRef<FlipBookRef | null>(null)
 
   // Sample magazine pages data
   const pages: PageContent[] = [
@@ -138,7 +140,8 @@ export default function ReadMagazine() {
       flipBookRef.current.pageFlip().flipPrev()
     }
   }, [currentPage])
-
+  
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onPageChange = useCallback((e: any) => {
     setCurrentPage(e.data)
   }, [])
