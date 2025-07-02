@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, JSX } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import dynamic from "next/dynamic"
@@ -12,13 +12,22 @@ const HTMLFlipBook = dynamic(() => import("react-pageflip").then((mod) => mod.de
 })
 
 // TypeScript Interfaces
+interface ContentBlock {
+  type: "title" | "author" | "date" | "heading" | "paragraph" | "image" | "quote" | "list"
+  text?: string
+  level?: number
+  src?: string
+  alt?: string
+  caption?: string
+  author?: string
+  items?: string[]
+  split?: boolean // Indicates if this block was split across pages
+}
 
 interface PageContent {
   id: number
-  title: string
-  content: string
-  image?: string
   type: "cover" | "article" | "content"
+  blocks: ContentBlock[]
 }
 
 interface FlipbookControlsProps {
@@ -31,89 +40,193 @@ interface FlipbookControlsProps {
 }
 
 interface FlipBookRef {
-    pageFlip(): {
-      flipNext(): void
-      flipPrev(): void
-    }
+  pageFlip(): {
+    flipNext(): void
+    flipPrev(): void
+    flip(pageNum: number): void
+    getCurrentPageIndex(): number
+    getPageCount(): number
   }
+}
+
+// Utility function to split text into chunks that fit on a page
+const splitTextBlock = (text: string, maxLines: number): [string, string] => {
+  const words = text.split(' ')
+  const midPoint = Math.floor(words.length / 2)
+  const firstPart = words.slice(0, midPoint).join(' ')
+  const secondPart = words.slice(midPoint).join(' ')
+  return [firstPart, secondPart]
+}
 
 export default function ReadMagazine() {
   const [currentPage, setCurrentPage] = useState(0)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [dimensions, setDimensions] = useState({ width: 400, height: 600 })
+  const [canGoNext, setCanGoNext] = useState(true)
+  const [canGoPrev, setCanGoPrev] = useState(false)
   const flipBookRef = useRef<FlipBookRef | null>(null)
 
-  // Sample magazine pages data
-  const pages: PageContent[] = [
-    {
-      id: 0,
-      title: "The Aevum",
-      content:
-        "Welcome to our first digital issue! Explore the future of technology through the eyes of tomorrow's innovators.",
-      image: "/placeholder.svg?height=400&width=300",
-      type: "cover",
-    },
-    {
-      id: 1,
-      title: "Table of Contents",
-      content:
-        "Featured Articles:\n\n• Quantum Leap Forward - Page 3\n• Ethics of AI - Page 7\n• Robotics Revolution - Page 11\n• Neural Networks Explained - Page 15\n• The Future of Computing - Page 19",
-      type: "content",
-    },
-    {
-      id: 2,
-      title: "Quantum Leap Forward",
-      content:
-        "Quantum computing represents one of the most significant technological breakthroughs of our time. Unlike classical computers that use bits to process information in binary states, quantum computers leverage quantum bits or 'qubits' that can exist in multiple states simultaneously.\n\nThis phenomenon, known as superposition, allows quantum computers to perform complex calculations exponentially faster than traditional computers. Recent advances in quantum error correction and qubit stability have brought us closer to practical quantum applications.",
-      image: "/placeholder.svg?height=300&width=250",
-      type: "article",
-    },
-    {
-      id: 3,
-      title: "Quantum Applications",
-      content:
-        "The applications of quantum computing span across multiple industries:\n\n• Cryptography: Breaking current encryption methods while creating quantum-safe alternatives\n• Drug Discovery: Simulating molecular interactions for pharmaceutical research\n• Financial Modeling: Optimizing portfolios and risk assessment\n• Weather Prediction: Processing vast amounts of atmospheric data\n• Artificial Intelligence: Accelerating machine learning algorithms\n\nMajor tech companies like IBM, Google, and Microsoft are investing billions in quantum research, with Google claiming 'quantum supremacy' in 2019.",
-      image: "/placeholder.svg?height=300&width=250",
-      type: "article",
-    },
-    {
-      id: 4,
-      title: "Ethics of AI",
-      content:
-        "As artificial intelligence becomes increasingly integrated into our daily lives, the ethical implications of AI development have never been more critical. From algorithmic bias to privacy concerns, the AI community faces unprecedented challenges in creating responsible technology.\n\nKey ethical considerations include:\n• Transparency in AI decision-making\n• Fairness and bias mitigation\n• Privacy and data protection\n• Accountability for AI actions\n• The impact on employment and society",
-      image: "/placeholder.svg?height=300&width=250",
-      type: "article",
-    },
-    {
-      id: 5,
-      title: "AI Governance",
-      content:
-        "Establishing proper governance frameworks for AI development is essential for ensuring these powerful technologies benefit humanity. Organizations worldwide are developing AI ethics guidelines and regulatory frameworks.\n\nThe European Union's AI Act, proposed in 2021, aims to regulate AI systems based on their risk levels. Similarly, companies are establishing AI ethics boards and implementing responsible AI practices in their development processes.\n\nThe future of AI depends on our ability to balance innovation with responsibility, ensuring that artificial intelligence serves as a tool for human flourishing rather than a source of harm.",
-      image: "/placeholder.svg?height=300&width=250",
-      type: "article",
-    },
-    {
-      id: 6,
-      title: "Robotics Revolution",
-      content:
-        "The field of robotics is experiencing unprecedented growth, with applications spanning from industrial automation to personal assistance. Modern robots are becoming more sophisticated, incorporating advanced AI, computer vision, and natural language processing capabilities.\n\nBreakthroughs in robotics include:\n• Collaborative robots (cobots) working alongside humans\n• Autonomous vehicles and delivery systems\n• Medical robots performing precise surgeries\n• Service robots in hospitality and retail\n• Exploration robots for space and deep-sea missions",
-      image: "/placeholder.svg?height=300&width=250",
-      type: "article",
-    },
-    {
-      id: 7,
-      title: "Future of Robotics",
-      content:
-        "The next decade promises even more exciting developments in robotics. Soft robotics, inspired by biological systems, will enable robots to interact more safely with humans and navigate complex environments.\n\nBio-inspired designs are leading to robots that can:\n• Adapt to changing environments\n• Self-repair and maintain themselves\n• Learn from experience and improve performance\n• Collaborate effectively with human teams\n\nAs robotics technology continues to advance, we're moving toward a future where robots will be seamlessly integrated into our homes, workplaces, and communities.",
-      image: "/placeholder.svg?height=300&width=250",
-      type: "article",
-    },
-  ]
+  // Sample magazine pages data with structured content blocks
+  const generatePages = (): PageContent[] => {
+    const pages: PageContent[] = []
+    let currentPageBlocks: ContentBlock[] = []
+    let currentHeight = 0
+    const pageHeight = dimensions.height * 0.8 // 80% of page height for content
+    const lineHeight = 24 // Approximate line height in pixels
+    const blockMargins = 16 // Approximate margin between blocks
 
-  const totalPages = Math.ceil(pages.length / 2)
+    // Cover page
+    pages.push({
+      id: 0,
+      type: "cover",
+      blocks: [
+        { type: "title", text: "The Aevum" },
+        { type: "image", src: "/reverse_flash.png" },
+        { type: "paragraph", text: "Welcome to our first digital issue! Explore the future of technology through the eyes of tomorrow's innovators." },
+      ],
+    })
+
+    // Article content
+    const articleContent: ContentBlock[] = [
+      { type: "title", text: "No Matter How Fast You Run, You Can't Escape Reality" },
+      { type: "author", text: "Md. Asif Khan" },
+      { type: "date", text: "June 28, 2025" },
+      { 
+        type: "image", 
+        src: "/reverse_flash.png", 
+        caption: "“I am the Reverse of everything you are. The dark to your light. And I will always be faster.” — Eobard Thawne to Barry Allen" 
+      },
+      { type: "heading", text: "Introduction", level: 2 },
+      { 
+        type: "paragraph", 
+        text: "In Detective Comics, few rivalries are as intense as the one between Barry Allen, the Flash and Eobard Thawne, the Reverse-Flash. It is a conflict not only of just speed but also of philosophy, trauma, and time itself. Their enmity forms a cosmic ouroboros—an eternal chase where the hunter and hunted are forever in loops of fate and obsession." 
+      },
+      { 
+        type: "paragraph", 
+        text: "This is more than a superhero-villain feud. It's a story of love twisted into hatred, of admiration turned into madness, and of a hero whose very existence cursed him with his deadliest enemy." 
+      }
+    ]
+
+    // Process content blocks and split them across pages as needed
+    for (const block of articleContent) {
+      let blockHeight = 0
+
+      // Estimate block height
+      switch (block.type) {
+        case "title":
+          blockHeight = 48
+          break
+        case "author":
+          blockHeight = 24
+          break
+        case "heading":
+          blockHeight = block.level === 2 ? 32 : 28
+          break
+        case "paragraph":
+          const words = block.text?.split(/\s+/)?.length || 0
+          const lines = Math.ceil(words / 10) // Approx 10 words per line
+          blockHeight = lines * lineHeight
+          break
+        case "image":
+          blockHeight = 250
+          break
+        case "quote":
+          blockHeight = 80
+          break
+        case "list":
+          blockHeight = (block.items?.length || 0) * 28
+          break
+        default:
+          blockHeight = 40
+      }
+
+      // Check if block fits in current page
+      if (currentHeight + blockHeight + blockMargins > pageHeight) {
+        // For paragraphs, try to split them
+        if (block.type === "paragraph" && blockHeight > lineHeight * 3) {
+          const [firstPart, secondPart] = splitTextBlock(block.text || '', Math.floor((pageHeight - currentHeight) / lineHeight))
+          
+          // Add first part to current page
+          currentPageBlocks.push({
+            ...block,
+            text: firstPart,
+            split: true
+          })
+          
+          // Create new page with remaining content
+          if (currentPageBlocks.length > 0) {
+            pages.push({
+              id: pages.length,
+              type: "article",
+              blocks: currentPageBlocks,
+            })
+          }
+          
+          // Start new page with second part
+          currentPageBlocks = [{
+            ...block,
+            text: secondPart,
+            split: true
+          }]
+          currentHeight = blockHeight / 2 // Approximate height of second part
+        } else {
+          // Push current page and start new one
+          if (currentPageBlocks.length > 0) {
+            pages.push({
+              id: pages.length,
+              type: "article",
+              blocks: currentPageBlocks,
+            })
+          }
+          currentPageBlocks = [block]
+          currentHeight = blockHeight
+        }
+      } else {
+        // Add block to current page
+        currentPageBlocks.push(block)
+        currentHeight += blockHeight + blockMargins
+      }
+    }
+
+    // Add remaining blocks to last page
+    if (currentPageBlocks.length > 0) {
+      pages.push({
+        id: pages.length,
+        type: "article",
+        blocks: currentPageBlocks,
+      })
+    }
+
+    return pages
+  }
+
+  const [pages, setPages] = useState<PageContent[]>([])
 
   useEffect(() => {
     setIsLoaded(true)
+    
+    // Handle responsive dimensions
+    const updateDimensions = () => {
+      const width = Math.min(window.innerWidth - 40, 500)
+      const height = width * 1.5
+      setDimensions({ width, height })
+      setPages(generatePages())
+    }
+    
+    updateDimensions()
+    window.addEventListener("resize", updateDimensions)
+    return () => window.removeEventListener("resize", updateDimensions)
   }, [])
+
+  const totalPages = pages.length
+
+  // Update navigation buttons state when page changes
+  useEffect(() => {
+    if (flipBookRef.current) {
+      setCanGoPrev(currentPage > 0)
+      setCanGoNext(currentPage < totalPages - 1)
+    }
+  }, [currentPage, totalPages])
 
   // Keyboard event handlers
   useEffect(() => {
@@ -130,96 +243,176 @@ export default function ReadMagazine() {
   }, [currentPage])
 
   const handleNextPage = useCallback(() => {
-    if (flipBookRef.current && currentPage < totalPages - 1) {
+    if (flipBookRef.current && canGoNext) {
       flipBookRef.current.pageFlip().flipNext()
     }
-  }, [currentPage, totalPages])
+  }, [canGoNext])
 
   const handlePrevPage = useCallback(() => {
-    if (flipBookRef.current && currentPage > 0) {
+    if (flipBookRef.current && canGoPrev) {
       flipBookRef.current.pageFlip().flipPrev()
     }
-  }, [currentPage])
+  }, [canGoPrev])
   
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const onPageChange = useCallback((e: any) => {
-    setCurrentPage(e.data)
-  }, [])
+  const onPageChange = useCallback((e: { data: number }) => {
+    const newPage = e.data
+    setCurrentPage(newPage)
+    setCanGoPrev(newPage > 0)
+    setCanGoNext(newPage < totalPages - 1)
+  }, [totalPages])
 
-  const renderPage = (pageContent: PageContent, isLeft = false) => (
-    <div className={`page-content h-full ${isLeft ? "page-left" : "page-right"}`}>
-      <div className="h-full bg-[#F9F5EB] border-2 border-[#2C5F7A] rounded-lg shadow-lg p-6 flex flex-col">
-        {/* Page Header */}
-        <div className="flex justify-between items-center mb-4 border-b-2 border-[#FBD86D] pb-2">
-          <h2 className="text-2xl font-bold text-[#486069] font-['Comic_Neue',_'Comic_Sans_MS',_cursive]">
-            {pageContent.title}
+  const renderBlock = (block: ContentBlock, index: number, pageContent: PageContent) => {
+    // Special case for title/author pages - center everything
+    const isTitlePage = pageContent.blocks.some(b => b.type === "title") && 
+                       pageContent.blocks.some(b => b.type === "author")
+    
+    // Add continuation indicator for split paragraphs
+    const isContinuation = block.split && index === 0
+    
+    switch (block.type) {
+      case "title":
+        return (
+          <h2 key={index} className={`text-2xl md:text-3xl font-bold text-[#486069] text-center ${isTitlePage ? "mt-auto" : "mb-4"}`}>
+            {block.text}
           </h2>
-          <span className="text-sm text-[#486069] font-semibold">Page {pageContent.id + 1}</span>
-        </div>
-
-        {/* Page Content */}
-        <div className="flex-1 flex flex-col">
-          {pageContent.image && (
-            <div className="mb-4 flex justify-center">
-              <Image
-                src={pageContent.image || "/placeholder.svg"}
-                alt={pageContent.title}
-                width={250}
-                height={300}
-                className="rounded-lg border-2 border-[#FBD86D] shadow-md"
-              />
-            </div>
-          )}
-
-          <div className="flex-1">
-            <p className="text-[#1F2937] leading-relaxed whitespace-pre-line font-['Comic_Neue',_'Comic_Sans_MS',_cursive]">
-              {pageContent.content}
+        )
+      case "author":
+        return (
+          <p key={index} className={`text-center text-[#486069] italic ${isTitlePage ? "mb-auto" : "mb-2"}`}>
+            By {block.text}
+          </p>
+        )
+      case "date":
+        return (
+          <p key={index} className="text-center text-[#486069] text-sm mb-4">
+            {block.text}
+          </p>
+        )
+      case "heading":
+        const HeadingTag = `h${block.level || 3}` as keyof JSX.IntrinsicElements
+        return (
+          <HeadingTag key={index} className={`font-bold mt-4 mb-2 text-[#2C5F7A] ${
+            block.level === 2 ? "text-xl" : "text-lg"
+          }`}>
+            {block.text}
+          </HeadingTag>
+        )
+      case "paragraph":
+        return (
+          <div key={index}>
+            {isContinuation && (
+              <p className="text-xs italic text-[#486069] mb-1">(continued from previous page)</p>
+            )}
+            <p className="text-[#1F2937] mb-3 leading-relaxed">
+              {block.text}
             </p>
           </div>
-        </div>
-
-        {/* Page Footer */}
-        <div className="mt-4 pt-2 border-t border-[#FBD86D]/30">
-          <div className="flex justify-center">
-            <svg width="100" height="10" viewBox="0 0 100 10" className="text-[#FBD86D]">
-              <path
-                d="M0 5 L10 2 L20 8 L30 2 L40 8 L50 2 L60 8 L70 2 L80 8 L90 2 L100 5"
-                stroke="currentColor"
-                strokeWidth="2"
-                fill="none"
+        )
+      case "image":
+        return (
+          <div key={index} className="my-4 flex flex-col items-center">
+            <div className="relative w-full max-w-xs h-48 md:h-64">
+              <Image
+                src={block.src || "/placeholder.svg"}
+                alt={block.alt || ""}
+                layout="fill"
+                objectFit="contain"
+                className="rounded-lg"
               />
-            </svg>
+            </div>
+            {block.caption && (
+              <p className="text-sm italic text-center mt-2 text-[#486069]">
+                {block.caption}
+              </p>
+            )}
           </div>
+        )
+      case "quote":
+        return (
+          <div key={index} className="border-l-4 border-[#FBD86D] pl-4 my-4 italic text-[#1F2937]">
+            <p className="mb-1">&quot;{block.text}&quot;</p>
+            {block.author && <p className="text-right">— {block.author}</p>}
+          </div>
+        )
+      case "list":
+        return (
+          <ul key={index} className="list-disc pl-5 my-3 text-[#1F2937]">
+            {block.items?.map((item, i) => (
+              <li key={i} className="mb-1">{item}</li>
+            ))}
+          </ul>
+        )
+      default:
+        return null
+    }
+  }
+
+  const renderPage = (pageContent: PageContent, isLeft = false) => {
+    const isTitlePage = pageContent.blocks.some(b => b.type === "title") && 
+                       pageContent.blocks.some(b => b.type === "author")
+    
+    return (
+      <div className={`page-content h-full ${isLeft ? "page-left" : "page-right"}`}>
+        <div className={`h-full bg-[#F9F5EB] border-2 border-[#2C5F7A] rounded-lg shadow-lg p-4 md:p-6 flex flex-col ${isTitlePage ? "justify-center" : ""}`}>
+          <div className={`flex-1 ${isTitlePage ? "flex flex-col justify-center" : ""}`}>
+            {pageContent.blocks.map((block, index) => renderBlock(block, index, pageContent))}
+          </div>
+
+          {/* Page Footer - hidden on title pages */}
+          {!isTitlePage && (
+            <div className="mt-auto pt-2 border-t border-[#FBD86D]/30">
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-[#486069]">The Aevum</span>
+                <span className="text-xs text-[#486069] font-medium">
+                  Page {pageContent.id + 1}
+                </span>
+              </div>
+              <div className="flex justify-center mt-1">
+                <svg width="100" height="10" viewBox="0 0 100 10" className="text-[#FBD86D]">
+                  <path
+                    d="M0 5 L10 2 L20 8 L30 2 L40 8 L50 2 L60 8 L70 2 L80 8 L90 2 L100 5"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    fill="none"
+                  />
+                </svg>
+              </div>
+            </div>
+          )}
         </div>
       </div>
-    </div>
-  )
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F9F5EB] to-[#E5E7EB] font-['Comic_Neue',_'Comic_Sans_MS',_cursive]">
       {/* Header */}
       <header className="bg-[#2C5F7A] shadow-lg">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-col sm:flex-row justify-between items-center">
           <Link
             href="/"
-            className="text-[#FBD86D] text-2xl font-bold hover:text-[#FCD34D] transition-colors duration-300"
+            className="text-[#FBD86D] text-lg sm:text-xl font-bold hover:text-[#FCD34D] transition-colors duration-300 mb-2 sm:mb-0"
           >
             ← Back to Home
           </Link>
-          <h1 className="text-3xl font-bold text-[#FBD86D]">The Aevum Reader</h1>
-          <div className="text-[#FBD86D] text-lg">
-            Page {currentPage * 2 + 1}-{Math.min(currentPage * 2 + 2, pages.length)} of {pages.length}
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#FBD86D] text-center my-2 sm:my-0">
+            The Aevum Reader
+          </h1>
+          <div className="text-[#FBD86D] text-sm sm:text-base">
+            Page {currentPage + 1} of {totalPages}
           </div>
         </div>
       </header>
 
       {/* Flipbook Container */}
-      <main className="flex-1 py-8 px-4">
+      <main className="flex-1 py-6 px-2 sm:px-4">
         <div className="max-w-6xl mx-auto">
           {/* Instructions */}
-          <div className="text-center mb-6">
-            <p className="text-[#486069] text-lg mb-2">Use arrow keys or buttons to flip pages</p>
-            <div className="flex justify-center space-x-4 text-sm text-[#1F2937]">
+          <div className="text-center mb-4">
+            <p className="text-[#486069] text-sm md:text-base mb-2">
+              Use arrow keys or buttons to flip pages
+            </p>
+            <div className="flex justify-center space-x-3 text-xs text-[#1F2937]">
               <span>← Previous Page</span>
               <span>Next Page →</span>
             </div>
@@ -230,16 +423,16 @@ export default function ReadMagazine() {
             className={`flipbook-container relative transform transition-all duration-1000 ${isLoaded ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
           >
             <div className="flex justify-center">
-              {typeof window !== "undefined" && (
+              {typeof window !== "undefined" && pages.length > 0 && (
                 <HTMLFlipBook
                   ref={flipBookRef}
-                  width={400}
-                  height={600}
+                  width={dimensions.width}
+                  height={dimensions.height}
                   size="stretch"
                   minWidth={300}
                   maxWidth={500}
-                  minHeight={400}
-                  maxHeight={700}
+                  minHeight={450}
+                  maxHeight={750}
                   maxShadowOpacity={0.5}
                   showCover={true}
                   mobileScrollSupport={false}
@@ -272,8 +465,8 @@ export default function ReadMagazine() {
           <FlipbookControls
             onPrevPage={handlePrevPage}
             onNextPage={handleNextPage}
-            canGoPrev={currentPage > 0}
-            canGoNext={currentPage < totalPages - 1}
+            canGoPrev={canGoPrev}
+            canGoNext={canGoNext}
             currentPage={currentPage}
             totalPages={totalPages}
           />
@@ -281,10 +474,12 @@ export default function ReadMagazine() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-[#2C5F7A] py-6 px-6">
+      <footer className="bg-[#2C5F7A] py-4 px-4">
         <div className="max-w-7xl mx-auto text-center">
-          <p className="text-[#FBD86D] mb-2">© 2025 The Aevum by NeuroNumb. All rights reserved.</p>
-          <p className="text-white text-sm">A project by Jahangirnagar University CSE</p>
+          <p className="text-[#FBD86D] mb-1 text-sm md:text-base">
+            © 2025 The Aevum by NeuroNumb. All rights reserved.
+          </p>
+          <p className="text-white text-xs">A project by Jahangirnagar University CSE</p>
         </div>
       </footer>
     </div>
@@ -301,29 +496,29 @@ function FlipbookControls({
   totalPages,
 }: FlipbookControlsProps) {
   return (
-    <div className="flex justify-center items-center space-x-8 mt-8">
+    <div className="flex justify-center items-center space-x-4 sm:space-x-8 mt-6">
       {/* Previous Button */}
       <button
         onClick={onPrevPage}
         disabled={!canGoPrev}
         className={`
-          px-6 py-3 rounded-xl font-bold text-lg border-4 shadow-lg transition-all duration-300 transform
+          px-4 py-2 sm:px-6 sm:py-3 rounded-lg font-bold text-sm sm:text-base border-3 shadow transition-all duration-300 transform
           ${
             canGoPrev
-              ? "bg-[#FBD86D] text-[#486069] border-[#486069] hover:bg-[#FCD34D] hover:scale-105 hover:shadow-2xl"
+              ? "bg-[#FBD86D] text-[#486069] border-[#486069] hover:bg-[#FCD34D] hover:scale-105 hover:shadow-lg"
               : "bg-gray-300 text-gray-500 border-gray-400 cursor-not-allowed"
           }
         `}
       >
-        <span className="flex items-center space-x-2">
+        <span className="flex items-center space-x-1 sm:space-x-2">
           <span>←</span>
-          <span>Previous</span>
+          <span className="hidden sm:inline">Previous</span>
         </span>
       </button>
 
       {/* Page Indicator */}
-      <div className="bg-[#F9F5EB] px-4 py-2 rounded-lg border-2 border-[#2C5F7A] shadow-md">
-        <span className="text-[#486069] font-bold">
+      <div className="bg-[#F9F5EB] px-3 py-1 sm:px-4 sm:py-2 rounded-md border-2 border-[#2C5F7A] shadow-sm">
+        <span className="text-[#486069] font-bold text-sm sm:text-base">
           {currentPage + 1} / {totalPages}
         </span>
       </div>
@@ -333,16 +528,16 @@ function FlipbookControls({
         onClick={onNextPage}
         disabled={!canGoNext}
         className={`
-          px-6 py-3 rounded-xl font-bold text-lg border-4 shadow-lg transition-all duration-300 transform
+          px-4 py-2 sm:px-6 sm:py-3 rounded-lg font-bold text-sm sm:text-base border-3 shadow transition-all duration-300 transform
           ${
             canGoNext
-              ? "bg-[#FBD86D] text-[#486069] border-[#486069] hover:bg-[#FCD34D] hover:scale-105 hover:shadow-2xl"
+              ? "bg-[#FBD86D] text-[#486069] border-[#486069] hover:bg-[#FCD34D] hover:scale-105 hover:shadow-lg"
               : "bg-gray-300 text-gray-500 border-gray-400 cursor-not-allowed"
           }
         `}
       >
-        <span className="flex items-center space-x-2">
-          <span>Next</span>
+        <span className="flex items-center space-x-1 sm:space-x-2">
+          <span className="hidden sm:inline">Next</span>
           <span>→</span>
         </span>
       </button>
