@@ -18,15 +18,6 @@ interface ContributorProps {
   image: string
 }
 
-interface HeaderProps {
-  title: string
-  subtitle: string
-}
-
-interface FooterProps {
-  year: number
-  projectName: string
-}
 
 export default function Home() {
   const [isLoaded, setIsLoaded] = useState(false)
