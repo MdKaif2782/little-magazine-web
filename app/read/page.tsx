@@ -77,15 +77,14 @@ export default function ReadMagazine() {
     const blockMargins = 16 // Approximate margin between blocks
 
     // Cover page
-    pages.push({
-      id: 0,
-      type: "cover",
-      blocks: [
-        { type: "title", text: "The Aevum" },
-        { type: "image", src: "/reverse_flash.png" },
-        { type: "paragraph", text: "Welcome to our first digital issue! Explore the future of technology through the eyes of tomorrow's innovators." },
-      ],
-    })
+pages.push({
+  id: 0,
+  type: "cover",
+  blocks: [
+    { type: "image", src: "/cover.png", alt: "Magazine Cover" }
+  ],
+})
+
 
     // Article content
 
@@ -302,10 +301,19 @@ export default function ReadMagazine() {
         )
       case "image":
         return (
-          <div key={index} className="my-4 flex flex-col items-center">
-            <div className="relative w-full max-w-xs h-48 md:h-64">
+          <div
+            key={index}
+            className={`relative ${pageContent.type === "cover" ? "w-full h-full" : "my-4 flex flex-col items-center"}`}
+          >
+            <div
+              className={`relative ${
+                pageContent.type === "cover" ? "w-full h-full" : "w-full max-w-xs h-48 md:h-64"
+              }`}
+            >
+
               <Image
-                src={block.src || "/placeholder.svg"}
+                // src={block.src || "/placeholder.svg"}
+                src = {pageContent.type === "cover" ? "/cover.png" :  "/placeholder.svg"}
                 alt={block.alt || ""}
                 layout="fill"
                 objectFit="contain"
