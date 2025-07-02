@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 
 // TypeScript Interfaces
 interface ArticleProps {
@@ -21,7 +22,7 @@ interface ContributorProps {
 
 export default function Home() {
   const [isLoaded, setIsLoaded] = useState(false)
-
+  const router = useRouter();
   useEffect(() => {
     setIsLoaded(true)
   }, [])
@@ -128,7 +129,11 @@ export default function Home() {
 
           {/* Start Reading Button */}
           <div className="relative inline-block">
-            <button className="bg-[#FBD86D] text-[#486069] px-8 py-4 rounded-xl text-xl font-bold border-4 border-[#486069] shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 hover:bg-[#FCD34D] relative overflow-hidden">
+            <button 
+            onClick={()=>{
+              router.push("/read")
+            }}
+            className="bg-[#FBD86D] text-[#486069] px-8 py-4 rounded-xl text-xl font-bold border-4 border-[#486069] shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 hover:bg-[#FCD34D] relative overflow-hidden">
               <span className="relative z-10">Start Reading</span>
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 transform translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-700"></div>
             </button>
