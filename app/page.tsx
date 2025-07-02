@@ -29,23 +29,20 @@ export default function Home() {
 
   // Sample data
   const articles: ArticleProps[] = [
+{
+  title: "No Matter How Fast You Run, You Cant Escape Reality",
+  description: "In Detective Comics, few rivalries are as intense as the one between Barry Allen, the Flash, and Eobard Thawne, the Reverse-Flash. It is a conflict not only of just speed but also of philosophy, trauma, and time itself. Their enmity forms a cosmic ouroboros—an eternal chase where the hunter and hunted are forever in loops of fate and obsession.",
+  image: "/reverse_flash.png",
+},
     {
-      title: "Quantum Leap Forward",
-      description:
-        "Exploring the revolutionary advances in quantum computing and how they're reshaping our understanding of computational possibilities. From quantum supremacy to practical applications in cryptography and optimization.",
-      image: "/placeholder.svg?height=200&width=300",
+title: "Quickstart in Robotics and Microcontrollers",
+description: "Machines that can think, sense, and react are all around us in the modern world. Examples include voice assistants, automated lights, and even intelligent farming equipment. However, how do these enchanted tools operate? Microcontrollers and robotics hold the key to the solution. These subjects are not limited to engineers or scientists. Anyone, especially inquisitive students in school or college, can learn how to use these creative tools.",
+image: "/spider.jpg",
     },
     {
-      title: "Ethics of AI",
-      description:
-        "Diving deep into the moral implications of artificial intelligence development. We examine bias, transparency, and the responsibility of creators in building ethical AI systems for the future.",
-      image: "/placeholder.svg?height=200&width=300",
-    },
-    {
-      title: "Robotics Revolution",
-      description:
-        "The latest breakthroughs in robotics technology are transforming industries from healthcare to manufacturing. Discover how autonomous systems are becoming our collaborative partners.",
-      image: "/placeholder.svg?height=200&width=300",
+      title: "The Ghostwriters Challenge: Working Without Credit",
+      description: "Ghostwriters face a difficult task. They must write accurately and clearly while aligning with the clients preferences, all without public recognition. This lack of credit can feel unfair—why should someone else be praised for their work?",
+      image: "/ghost_writing.png",
     },
   ]
 
@@ -54,50 +51,50 @@ export default function Home() {
       name: "Maliha Laheen",
       roll: 322,
       reg: "20240659104",
-      role: "Editor-in-Chief",
-      image: "/placeholder.svg?height=150&width=150",
+      role: "Editor",
+      image: "/laheen.jpeg",
     },
     {
       name: "Ferdous Ara Fahima",
       roll: 323,
       reg: "20240659105",
-      role: "Lead Writer",
-      image: "/placeholder.svg?height=150&width=150",
+      role: "Proofreader",
+      image: "/fahima.jpeg",
     },
     {
       name: "Sultana Akter",
       roll: 325,
       reg: "20240659107",
-      role: "Graphic Designer",
-      image: "/placeholder.svg?height=150&width=150",
+      role: "Reviewer",
+      image: "/sultana.jpeg",
     },
     {
       name: "Md. Asif Khan",
       roll: 348,
       reg: "20240659130",
-      role: "Technical Editor",
-      image: "/placeholder.svg?height=150&width=150",
+      role: "Typesetter",
+      image: "/asif.jpeg",
     },
     {
       name: "Md. Kaif Ibn Zaman",
       roll: 358,
       reg: "20240659140",
-      role: "Researcher",
-      image: "/placeholder.svg?height=150&width=150",
+      role: "Reviewer",
+      image: "/kaif.jpeg",
     },
     {
       name: "Muhaimin Kamran",
       roll: 366,
       reg: "20240659148",
-      role: "Content Writer",
-      image: "/placeholder.svg?height=150&width=150",
+      role: "Typesetter",
+      image: "/kamran.jpeg",
     },
     {
       name: "Tamjeed Rahman Udoy",
       roll: 373,
       reg: "20240659155",
-      role: "Illustrator",
-      image: "/placeholder.svg?height=150&width=150",
+      role: "Proofreader",
+      image: "/udoy.jpeg",
     },
   ]
 
@@ -114,11 +111,11 @@ export default function Home() {
             className="object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-[#2C5F7A]/70 to-[#2C5F7A]/50"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-[#000000]/60 to-[#000000]/40"></div>
         </div>
 
         {/* Comic Panel Border */}
-        <div className="absolute inset-4 border-4 border-[#FBD86D] rounded-3xl shadow-2xl"></div>
+        {/* <div className="absolute inset-4 border-4 border-[#FBD86D] rounded-3xl shadow-2xl"></div> */}
 
         {/* Content */}
         <div
@@ -128,7 +125,20 @@ export default function Home() {
           <p className="text-xl md:text-2xl text-white mb-8 font-bold">by NeuroNumb</p>
 
           {/* Start Reading Button */}
-          <div className="relative inline-block">
+          <div className="flex flex-row relative">
+            <div className="w-10"></div>
+
+            <button 
+            onClick={()=>{
+              router.push("/read")
+            }}
+            className="bg-transparent text-[#FBD86D] px-8 py-4 rounded-xl text-xl font-bold border-4 border-[#FBD86D] shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 hover:bg-[#FBD86D] hover:text-[#486069] relative overflow-hidden">
+              <span className="relative z-10">Download</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 transform translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-700"></div>
+            </button>
+
+            <div className="w-4"></div>
+
             <button 
             onClick={()=>{
               router.push("/read")
@@ -139,7 +149,7 @@ export default function Home() {
             </button>
 
             {/* Comic Speech Bubble Tail */}
-            <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2">
+            <div className="absolute -bottom-4 left-12/20 transform -translate-x-1/2">
               <div className="w-0 h-0 border-l-[15px] border-r-[15px] border-t-[20px] border-l-transparent border-r-transparent border-t-[#486069]"></div>
             </div>
           </div>
@@ -264,7 +274,9 @@ export default function Home() {
 
           {/* University Attribution */}
           <div className="text-center">
-            <p className="text-[#1F2937] text-lg font-semibold">A project by Jahangirnagar University CSE</p>
+            <p className="text-[#1F2937] text-lg font-semibold">A project by NeuroNumb,</p>
+            <p className="text-[#1F2937] text-lg font-semibold">Department of Computer Science & Engineering,</p>
+            <p className="text-[#1F2937] text-lg font-semibold">Jahangirnagar University</p>
           </div>
         </div>
       </section>
@@ -272,7 +284,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-[#F9F5EB] py-8 px-6 border-t-4 border-[#2C5F7A]">
         <div className="max-w-7xl mx-auto text-center">
-          <p className="text-[#1F2937] mb-4">© 2025 The Aevum by NeuroNumb. All rights reserved.</p>
+          <p className="text-[#1F2937] mb-4">2025 The Aevum by NeuroNumb.</p>
 
           {/* Social Media Icons */}
           <div className="flex justify-center space-x-6">
