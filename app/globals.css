@@ -84,3 +84,58 @@ html {
 ::-webkit-scrollbar-thumb:hover {
   background: #486069;
 }
+
+/* Flipbook specific styles */
+.flipbook-container {
+  perspective: 1000px;
+}
+
+.flipbook {
+  margin: 0 auto;
+}
+
+.page {
+  background: white;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.page-content {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.page-left {
+  border-right: 1px solid #e5e7eb;
+}
+
+.page-right {
+  border-left: 1px solid #e5e7eb;
+}
+
+/* Mobile responsiveness for flipbook */
+@media (max-width: 768px) {
+  .flipbook {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  .page-content {
+    padding: 1rem;
+  }
+}
+
+/* Page flip animations */
+.stf__parent {
+  perspective: 2000px;
+}
+
+.stf__item {
+  transform-style: preserve-3d;
+}
+
+/* Enhanced shadows for realistic effect */
+.stf__item .stf__shadow {
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.3), transparent);
+}
+
