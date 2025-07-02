@@ -130,7 +130,8 @@ image: "/spider.jpg",
 
             <button 
             onClick={()=>{
-              router.push("/read")
+              //open in new tab
+              window.open("https://juniv-my.sharepoint.com/:b:/g/personal/20240659140mdkaif_juniv_edu/ESjYGMrYNuVGhrruJZJPgtYBjf-JxbLORQcE3RPH2-qB2g?e=WXJfmx", "_blank");
             }}
             className="bg-transparent text-[#FBD86D] px-8 py-4 rounded-xl text-xl font-bold border-4 border-[#FBD86D] shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 hover:bg-[#FBD86D] hover:text-[#486069] relative overflow-hidden">
               <span className="relative z-10">Download</span>
