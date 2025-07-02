@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { ChevronDown, ChevronUp } from "lucide-react"
+import { ChevronDown, ChevronUp, Github } from "lucide-react"
 
 // TypeScript Interfaces
 interface ArticleProps {
@@ -393,14 +393,19 @@ export default function Home() {
 
             {/* Social Media Icons */}
             <div className="flex space-x-4">
-              <button className="w-12 h-12 bg-[#2C5F7A] text-white rounded-full hover:bg-[#FBD86D] hover:text-[#1F2937] transition-all duration-300 hover:scale-110 flex items-center justify-center shadow-lg">
-                <span className="text-lg font-bold">X</span>
+              <button
+              onClick={() => {
+                window.open("https://github.com/MdKaif2782/little-maga-web", "_blank")
+              }}
+              className="w-12 h-12 bg-[#2C5F7A] text-white rounded-full hover:bg-[#FBD86D] hover:text-[#1F2937] transition-all duration-300 hover:scale-110 flex items-center justify-center shadow-lg">
+                <Github className="w-6 h-6" color="white" />
               </button>
-              <button className="w-12 h-12 bg-[#2C5F7A] text-white rounded-full hover:bg-[#FBD86D] hover:text-[#1F2937] transition-all duration-300 hover:scale-110 flex items-center justify-center shadow-lg">
-                <span className="text-lg font-bold">in</span>
-              </button>
-              <button className="w-12 h-12 bg-[#2C5F7A] text-white rounded-full hover:bg-[#FBD86D] hover:text-[#1F2937] transition-all duration-300 hover:scale-110 flex items-center justify-center shadow-lg">
-                <span className="text-lg font-bold">@</span>
+              <button
+              onClick={() => {
+                window.open("https://github.com/MdKaif2782/chotto-magazine", "_blank")
+              }}
+               className="w-12 h-12 bg-[#2C5F7A] text-white rounded-full hover:bg-[#FBD86D] hover:text-[#1F2937] transition-all duration-300 hover:scale-110 flex items-center justify-center shadow-lg">
+                <Github className="w-6 h-6" color="white" />
               </button>
             </div>
           </div>
