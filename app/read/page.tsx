@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, JSX } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import dynamic from "next/dynamic"
+import { articleContent } from "@/utils/data"
 
 // Dynamically import HTMLFlipBook to avoid SSR issues
 const HTMLFlipBook = dynamic(() => import("react-pageflip").then((mod) => mod.default), {
@@ -12,7 +13,7 @@ const HTMLFlipBook = dynamic(() => import("react-pageflip").then((mod) => mod.de
 })
 
 // TypeScript Interfaces
-interface ContentBlock {
+export interface ContentBlock {
   type: "title" | "author" | "date" | "heading" | "paragraph" | "image" | "quote" | "list"
   text?: string
   level?: number
@@ -50,7 +51,7 @@ interface FlipBookRef {
 }
 
 // Utility function to split text into chunks that fit on a page
-const splitTextBlock = (text: string, maxLines: number): [string, string] => {
+const splitTextBlock = (text: string): [string, string] => {
   const words = text.split(' ')
   const midPoint = Math.floor(words.length / 2)
   const firstPart = words.slice(0, midPoint).join(' ')
@@ -87,25 +88,6 @@ export default function ReadMagazine() {
     })
 
     // Article content
-    const articleContent: ContentBlock[] = [
-      { type: "title", text: "No Matter How Fast You Run, You Can't Escape Reality" },
-      { type: "author", text: "Md. Asif Khan" },
-      { type: "date", text: "June 28, 2025" },
-      { 
-        type: "image", 
-        src: "/reverse_flash.png", 
-        caption: "“I am the Reverse of everything you are. The dark to your light. And I will always be faster.” — Eobard Thawne to Barry Allen" 
-      },
-      { type: "heading", text: "Introduction", level: 2 },
-      { 
-        type: "paragraph", 
-        text: "In Detective Comics, few rivalries are as intense as the one between Barry Allen, the Flash and Eobard Thawne, the Reverse-Flash. It is a conflict not only of just speed but also of philosophy, trauma, and time itself. Their enmity forms a cosmic ouroboros—an eternal chase where the hunter and hunted are forever in loops of fate and obsession." 
-      },
-      { 
-        type: "paragraph", 
-        text: "This is more than a superhero-villain feud. It's a story of love twisted into hatred, of admiration turned into madness, and of a hero whose very existence cursed him with his deadliest enemy." 
-      }
-    ]
 
     // Process content blocks and split them across pages as needed
     for (const block of articleContent) {
@@ -115,6 +97,15 @@ export default function ReadMagazine() {
       switch (block.type) {
         case "title":
           blockHeight = 48
+          if (currentPageBlocks.length > 0) {
+            pages.push({
+            id: pages.length,
+            type: "article",
+            blocks: currentPageBlocks,
+            })
+            currentPageBlocks = []
+            currentHeight = 0
+          }
           break
         case "author":
           blockHeight = 24
@@ -144,8 +135,8 @@ export default function ReadMagazine() {
       if (currentHeight + blockHeight + blockMargins > pageHeight) {
         // For paragraphs, try to split them
         if (block.type === "paragraph" && blockHeight > lineHeight * 3) {
-          const [firstPart, secondPart] = splitTextBlock(block.text || '', Math.floor((pageHeight - currentHeight) / lineHeight))
-          
+          const [firstPart, secondPart] = splitTextBlock(block.text || '')
+
           // Add first part to current page
           currentPageBlocks.push({
             ...block,
@@ -161,6 +152,7 @@ export default function ReadMagazine() {
               blocks: currentPageBlocks,
             })
           }
+
           
           // Start new page with second part
           currentPageBlocks = [{
