@@ -313,7 +313,7 @@ pages.push({
 
               <Image
                 // src={block.src || "/placeholder.svg"}
-                src = {pageContent.type === "cover" ? "/cover.png" :  "/placeholder.svg"}
+                src = {pageContent.type === "cover" ? "/cover.png" : "/"+block.src || "/placeholder.svg"}
                 alt={block.alt || ""}
                 layout="fill"
                 objectFit="contain"
