@@ -5,6 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import dynamic from "next/dynamic"
 import { articleContent } from "@/utils/data"
+import { Footer } from "@/components/footer"
 
 // Dynamically import HTMLFlipBook to avoid SSR issues
 const HTMLFlipBook = dynamic(() => import("react-pageflip").then((mod) => mod.default), {
@@ -539,12 +540,7 @@ export default function ReadMagazine() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-[#2C5F7A] py-4 px-4">
-        <div className="max-w-7xl mx-auto text-center">
-          <p className="text-[#FBD86D] mb-1 text-sm">© 2025 The Aevum by NeuroNumb. All rights reserved.</p>
-          <p className="text-white text-xs">A project by Jahangirnagar University CSE</p>
-        </div>
-      </footer>
+      <Footer/>
     </div>
   )
 }
