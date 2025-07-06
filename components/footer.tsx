@@ -18,7 +18,7 @@ export const Footer = () =>{
             <div className="flex space-x-4">
               <button
               onClick={() => {
-                window.open("https://github.com/MdKaif2782/little-maga-web", "_blank")
+                window.open("https://github.com/MdKaif2782/little-magazine-web", "_blank")
               }}
               className="w-12 h-12 bg-[#2C5F7A] text-white rounded-full hover:bg-[#FBD86D] hover:text-[#1F2937] transition-all duration-300 hover:scale-110 flex items-center justify-center shadow-lg">
                 <Github className="w-6 h-6" color="white" />
